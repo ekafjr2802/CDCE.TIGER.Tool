@@ -1,0 +1,40 @@
+name: Build CDCE Tool Direct
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+
+    # --- TAHAP 1: Restore & Build DUMPER ---
+    - name: Restore NuGet for Dumper
+      run: nuget restore CDCE.Dumper/CDCE.Dumper/CDCE.Dumper.csproj
+
+    - name: Build Dumper
+      run: msbuild CDCE.Dumper/CDCE.Dumper/CDCE.Dumper.csproj /p:Configuration=Release /p:Platform="AnyCPU"
+
+    # --- TAHAP 2: Restore & Build UNPACKER ---
+    - name: Restore NuGet for Unpacker
+      run: nuget restore CDCE.Unpacker/CDCE.Unpacker/CDCE.Unpacker.csproj
+
+    - name: Build Unpacker
+      run: msbuild CDCE.Unpacker/CDCE.Unpacker/CDCE.Unpacker.csproj /p:Configuration=Release /p:Platform="AnyCPU"
+
+    # --- TAHAP 3: Kumpulkan Hasilnya ---
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: CDCE-Tool-Complete
+        path: |
+          CDCE.Dumper/CDCE.Dumper/bin/Release/CDCE.Dumper.exe
+          CDCE.Unpacker/CDCE.Unpacker/bin/Release/CDCE.Unpacker.exe
